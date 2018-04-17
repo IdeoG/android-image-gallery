@@ -6,8 +6,11 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +21,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 
@@ -44,9 +48,9 @@ public class GalleryActivity extends AppCompatActivity {
 
     Button search_btn = null;
     EditText search_edit = null;
-    GridView imagesGrid = null;
+    RecyclerView recycler_view;
+    RecyclerView.Adapter adapter;
 
-    private ImageListAdapter adapter = null;
     private ArrayList<String> imageUrls = new ArrayList<>();
 
     @Override protected void onCreate(Bundle savedInstanceState) {
@@ -59,41 +63,16 @@ public class GalleryActivity extends AppCompatActivity {
     private void initializeUI() {
         search_btn = findViewById(R.id.search_btn);
         search_edit = findViewById(R.id.search_edit);
-        imagesGrid = findViewById(R.id.imagesGrid);
+        recycler_view = findViewById(R.id.my_recycler_view);
 
-        try {
-            findImages(search_edit.getText().toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        adapter = new ImageListAdapter(
+        recycler_view.setLayoutManager(new GridLayoutManager(this, 2));
+        adapter = new ImageAdapter(
                 GalleryActivity.this,
                 imageUrls
         );
-
-        imagesGrid.setAdapter(adapter);
-
-        imagesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                ImageView imageView = (ImageView) view;
-                imageView.buildDrawingCache();
-
-                Bitmap bmp = imageView.getDrawingCache();
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-                byte[] byteArray = stream.toByteArray();
-
-                Intent intent = new Intent(GalleryActivity.this, ImageActivity.class);
-                intent.putExtra("image", byteArray);
-
-                startActivity(intent);
-            }
-        });
-
+        recycler_view.setAdapter(adapter);
         search_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+            @Override public void onClick(View v) {
                 try {
                     findImages(search_edit.getText().toString());
                 } catch (IOException e) {
@@ -135,54 +114,64 @@ public class GalleryActivity extends AppCompatActivity {
                     JSONObject raw = new JSONObject(resp);
                     JSONObject photos = raw.getJSONObject("photos");
                     JSONArray photo = photos.getJSONArray("photo");
-                    int len = (photo.length() > 10) ? 10 : photo.length();
+                    int len = (photo.length() > 20) ? 20 : photo.length();
                     imageUrls.clear();
                     for (int i=0; i < len; i++) {
-                        String title = photo.getJSONObject(i).getString("title");
                         String url = photo.getJSONObject(i).getString("url_s");
-
                         imageUrls.add(url);
                     }
+
+                    Log.i(TAG, "onResponse: " + photo.toString());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+
                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                     @Override public void run() {
                         adapter.notifyDataSetChanged();
-                        Log.i(TAG, "notifyDataSetChanged");
                     }
                 });
             }
         });
     }
 
-    public class ImageListAdapter extends ArrayAdapter {
-        private String TAG =  "ImageListAdapter";
-        private Context context;
-        private LayoutInflater inflater;
-
+    public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder>  {
         private List<String> imageUrls;
+        private Context context;
 
-        public ImageListAdapter(Context context, List<String> imageUrls) {
-            super(context, R.layout.grid_view_layout, imageUrls);
-
+        public ImageAdapter(Context context, List<String> imageUrls) {
             this.context = context;
             this.imageUrls = imageUrls;
-
-            inflater = LayoutInflater.from(context);
+            Log.i(TAG, "ImageAdapter: " + imageUrls.size());
         }
 
-        @Override public View getView(int position, View convertView, ViewGroup parent) {
-            if (null == convertView) {
-                convertView = inflater.inflate(R.layout.grid_view_layout, parent, false);
-            }
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            LayoutInflater inflater = LayoutInflater.from(context);
+            View v = inflater.inflate(R.layout.gallery_item, parent, false);
+            return new ViewHolder(v);
+        }
 
+        @Override public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            String url = imageUrls.get(position);
             Glide.with(context)
-                    .load(imageUrls.get(position))
-                    .into((ImageView) convertView);
+                    .load(url)
+                    .into(holder.itemImageView);
+            Log.i(TAG, "onBindViewHolder: glide update/position = " + position);
+        }
 
-            Log.i(TAG, "getView: newView " + position);
-            return convertView;
+        @Override public int getItemCount() {
+            return imageUrls.size();
+        }
+
+        public class ViewHolder extends RecyclerView.ViewHolder {
+            private ImageView itemImageView;
+
+            public ViewHolder(View itemView) {
+                super(itemView);
+                itemImageView = itemView.findViewById(R.id.gallery_item_image);
+            }
         }
     }
 }
