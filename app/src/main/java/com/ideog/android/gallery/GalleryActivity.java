@@ -156,7 +156,6 @@ public class GalleryActivity extends AppCompatActivity {
         });
     }
 
-
     public class ImageListAdapter extends ArrayAdapter {
         private String TAG =  "ImageListAdapter";
         private Context context;
