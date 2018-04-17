@@ -5,49 +5,68 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".GalleryActivity">
-    <!--<LinearLayout-->
-        <!--android:orientation="vertical"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent">-->
 
-        <!--<android.support.constraint.ConstraintLayout-->
-            <!--android:orientation="horizontal"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent">-->
-
-            <!--<EditText-->
-                <!--android:id="@+id/search_edit"-->
-                <!--android:layout_width="0dp"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:layout_marginEnd="8dp"-->
-                <!--android:layout_marginStart="8dp"-->
-                <!--android:layout_marginTop="16dp"-->
-                <!--app:layout_constraintEnd_toStartOf="@+id/search_btn"-->
-                <!--app:layout_constraintHorizontal_bias="1.0"-->
-                <!--app:layout_constraintStart_toStartOf="parent"-->
-                <!--app:layout_constraintTop_toTopOf="parent" />-->
-
-            <!--<Button-->
-                <!--android:id="@+id/search_btn"-->
-                <!--android:layout_width="0dp"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:layout_marginEnd="8dp"-->
-                <!--android:text="Search"-->
-                <!--app:layout_constraintBaseline_toBaselineOf="@+id/search_edit"-->
-                <!--app:layout_constraintEnd_toEndOf="parent" />-->
-        <!--</android.support.constraint.ConstraintLayout>-->
-
-    <GridView
-        android:id="@+id/imagesGrid"
-        android:columnWidth="100dp"
-        android:numColumns="2"
-        android:horizontalSpacing="5dp"
-        android:verticalSpacing="5dp"
-        android:stretchMode="columnWidth"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-    </GridView>
-    <!--</LinearLayout>-->
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/my_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            android:elevation="4dp"
+            android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/search_edit"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="16dp"
+                app:layout_constraintEnd_toStartOf="@+id/search_btn"
+                app:layout_constraintHorizontal_bias="1.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/search_btn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="Search"
+                app:layout_constraintBaseline_toBaselineOf="@+id/search_edit"
+                app:layout_constraintEnd_toEndOf="parent" />
+        </android.support.constraint.ConstraintLayout>
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <GridView
+                android:id="@+id/imagesGrid"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:columnWidth="100dp"
+                android:horizontalSpacing="5dp"
+                android:numColumns="2"
+                android:stretchMode="columnWidth"
+                android:verticalSpacing="5dp">
+            </GridView>
+
+        </android.support.constraint.ConstraintLayout>
+
+
+    </LinearLayout>
 
 
 </android.support.constraint.ConstraintLayout>

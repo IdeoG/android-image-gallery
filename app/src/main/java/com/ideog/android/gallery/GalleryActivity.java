@@ -57,10 +57,12 @@ public class GalleryActivity extends AppCompatActivity {
     }
 
     private void initializeUI() {
+        search_btn = findViewById(R.id.search_btn);
+        search_edit = findViewById(R.id.search_edit);
         imagesGrid = findViewById(R.id.imagesGrid);
 
         try {
-            findImages();
+            findImages(search_edit.getText().toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -88,18 +90,34 @@ public class GalleryActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        search_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    findImages(search_edit.getText().toString());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
-    private void findImages() throws IOException {
+    private void findImages(String text) throws IOException {
+        if (text.equals(""))
+            return;
+
         String url = Uri.parse("https://api.flickr.com/services/rest/")
                 .buildUpon()
-                .appendQueryParameter("method", "flickr.photos.getRecent")
+                .appendQueryParameter("method", "flickr.photos.search")
                 .appendQueryParameter("api_key", API_KEY)
+                .appendQueryParameter("text", text)
+                .appendQueryParameter("sort", "interestingness-asc")
                 .appendQueryParameter("format", "json")
                 .appendQueryParameter("nojsoncallback", "1")
                 .appendQueryParameter("extras", "url_s")
                 .build().toString();
-
+        Log.i(TAG, "findImages: url request = " + url);
         OkHttpClient client = new OkHttpClient();
 
         Request request = new Request.Builder()
@@ -114,20 +132,17 @@ public class GalleryActivity extends AppCompatActivity {
             @Override  public void onResponse(Call call, Response response) throws IOException {
                 String resp = response.body().string();
                 try {
-
                     JSONObject raw = new JSONObject(resp);
                     JSONObject photos = raw.getJSONObject("photos");
                     JSONArray photo = photos.getJSONArray("photo");
-                    int len = photo.length();
+                    int len = (photo.length() > 10) ? 10 : photo.length();
+                    imageUrls.clear();
                     for (int i=0; i < len; i++) {
                         String title = photo.getJSONObject(i).getString("title");
                         String url = photo.getJSONObject(i).getString("url_s");
 
                         imageUrls.add(url);
-                        Log.i(TAG, "onResponse: response title: " + title +
-                                ", url_s: " + url);
                     }
-                    Log.i(TAG, "onResponse: imageUrl lenght: " + photo.length());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
