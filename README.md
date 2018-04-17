@@ -2,4 +2,4 @@
 
 ## Что нужно сделать?
 
-* Переписать ListView на RecyclerView
+* Переписать OkHttp под Retrofit
