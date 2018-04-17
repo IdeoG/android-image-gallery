@@ -3,6 +3,9 @@ package com.ideog.android.gallery;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,51 +14,69 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class GalleryActivity extends AppCompatActivity {
     private static String TAG = "GalleryActivity";
-    public static String[] eatFoodyImages = {
-            "http://i.imgur.com/rFLNqWI.jpg",
-            "http://i.imgur.com/C9pBVt7.jpg",
-            "http://i.imgur.com/rT5vXE1.jpg",
-            "http://i.imgur.com/aIy5R2k.jpg",
-            "http://i.imgur.com/MoJs9pT.jpg",
-            "http://i.imgur.com/S963yEM.jpg",
-            "http://i.imgur.com/rLR2cyc.jpg",
-            "http://i.imgur.com/SEPdUIx.jpg",
-            "http://i.imgur.com/aC9OjaM.jpg",
-            "http://i.imgur.com/76Jfv9b.jpg",
-            "http://i.imgur.com/fUX7EIB.jpg",
-            "http://i.imgur.com/syELajx.jpg",
-            "http://i.imgur.com/COzBnru.jpg",
-            "http://i.imgur.com/Z3QjilA.jpg",
-    };
+    private final String API_KEY = "967e2082cbdb43b27b6c0df3325d1843";
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    Button search_btn = null;
+    EditText search_edit = null;
+    GridView imagesGrid = null;
+
+    private ImageListAdapter adapter = null;
+    private ArrayList<String> imageUrls = new ArrayList<>();
+
+    @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery);
 
-        GridView imagesGrid = findViewById(R.id.imagesGrid);
-        imagesGrid.setAdapter(
-                new ImageListAdapter(
-                        GalleryActivity.this,
-                        eatFoodyImages
-                )
+        initializeUI();
+    }
+
+    private void initializeUI() {
+        imagesGrid = findViewById(R.id.imagesGrid);
+
+        try {
+            findImages();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        adapter = new ImageListAdapter(
+                GalleryActivity.this,
+                imageUrls
         );
+
+        imagesGrid.setAdapter(adapter);
+
         imagesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.i(TAG, "itemClick: position = " + position + ", id = "
-                        + id);
+            @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 ImageView imageView = (ImageView) view;
                 imageView.buildDrawingCache();
+
                 Bitmap bmp = imageView.getDrawingCache();
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
@@ -63,18 +84,72 @@ public class GalleryActivity extends AppCompatActivity {
 
                 Intent intent = new Intent(GalleryActivity.this, ImageActivity.class);
                 intent.putExtra("image", byteArray);
+
                 startActivity(intent);
             }
         });
     }
 
+    private void findImages() throws IOException {
+        String url = Uri.parse("https://api.flickr.com/services/rest/")
+                .buildUpon()
+                .appendQueryParameter("method", "flickr.photos.getRecent")
+                .appendQueryParameter("api_key", API_KEY)
+                .appendQueryParameter("format", "json")
+                .appendQueryParameter("nojsoncallback", "1")
+                .appendQueryParameter("extras", "url_s")
+                .build().toString();
+
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override  public void onResponse(Call call, Response response) throws IOException {
+                String resp = response.body().string();
+                try {
+
+                    JSONObject raw = new JSONObject(resp);
+                    JSONObject photos = raw.getJSONObject("photos");
+                    JSONArray photo = photos.getJSONArray("photo");
+                    int len = photo.length();
+                    for (int i=0; i < len; i++) {
+                        String title = photo.getJSONObject(i).getString("title");
+                        String url = photo.getJSONObject(i).getString("url_s");
+
+                        imageUrls.add(url);
+                        Log.i(TAG, "onResponse: response title: " + title +
+                                ", url_s: " + url);
+                    }
+                    Log.i(TAG, "onResponse: imageUrl lenght: " + photo.length());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override public void run() {
+                        adapter.notifyDataSetChanged();
+                        Log.i(TAG, "notifyDataSetChanged");
+                    }
+                });
+            }
+        });
+    }
+
+
     public class ImageListAdapter extends ArrayAdapter {
+        private String TAG =  "ImageListAdapter";
         private Context context;
         private LayoutInflater inflater;
 
-        private String[] imageUrls;
+        private List<String> imageUrls;
 
-        public ImageListAdapter(Context context, String[] imageUrls) {
+        public ImageListAdapter(Context context, List<String> imageUrls) {
             super(context, R.layout.grid_view_layout, imageUrls);
 
             this.context = context;
@@ -83,16 +158,16 @@ public class GalleryActivity extends AppCompatActivity {
             inflater = LayoutInflater.from(context);
         }
 
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        @Override public View getView(int position, View convertView, ViewGroup parent) {
             if (null == convertView) {
                 convertView = inflater.inflate(R.layout.grid_view_layout, parent, false);
             }
 
             Glide.with(context)
-                    .load(imageUrls[position])
+                    .load(imageUrls.get(position))
                     .into((ImageView) convertView);
 
+            Log.i(TAG, "getView: newView " + position);
             return convertView;
         }
     }
