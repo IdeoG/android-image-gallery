@@ -142,7 +142,6 @@ public class GalleryActivity extends AppCompatActivity {
         public ImageAdapter(Context context, List<String> imageUrls) {
             this.context = context;
             this.imageUrls = imageUrls;
-            Log.i(TAG, "ImageAdapter: " + imageUrls.size());
         }
 
         @NonNull
@@ -158,7 +157,6 @@ public class GalleryActivity extends AppCompatActivity {
             Glide.with(context)
                     .load(url)
                     .into(holder.itemImageView);
-            Log.i(TAG, "onBindViewHolder: glide update/position = " + position);
         }
 
         @Override public int getItemCount() {
