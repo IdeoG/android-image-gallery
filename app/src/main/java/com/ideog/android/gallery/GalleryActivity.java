@@ -24,6 +24,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -154,7 +155,9 @@ public class GalleryActivity extends AppCompatActivity {
 
         @Override public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             String url = imageUrls.get(position);
-            Glide.with(context)
+            holder.position = position;
+
+            Picasso.get()
                     .load(url)
                     .into(holder.itemImageView);
         }
@@ -163,12 +166,23 @@ public class GalleryActivity extends AppCompatActivity {
             return imageUrls.size();
         }
 
-        public class ViewHolder extends RecyclerView.ViewHolder {
+        public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
             private ImageView itemImageView;
+            private int position;
 
             public ViewHolder(View itemView) {
                 super(itemView);
                 itemImageView = itemView.findViewById(R.id.gallery_item_image);
+                itemImageView.setOnClickListener(this);
+            }
+
+            @Override public void onClick(View v) {
+                if (v instanceof ImageView) {
+                    Intent intent = new Intent(GalleryActivity.this, ImageActivity.class);
+                    intent.putExtra("image", imageUrls.get(position));
+
+                    startActivity(intent);
+                }
             }
         }
     }
