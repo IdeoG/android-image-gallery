@@ -52,7 +52,7 @@ public class GalleryActivity extends AppCompatActivity {
     RecyclerView recycler_view;
     RecyclerView.Adapter adapter;
 
-    private ArrayList<String> imageUrls = new ArrayList<>();
+    private static ArrayList<String> imageUrls = new ArrayList<>();
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -135,8 +135,29 @@ public class GalleryActivity extends AppCompatActivity {
             }
         });
     }
+    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        private ImageView itemImageView;
+        private int position;
+        private Context context;
 
-    public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder>  {
+        public ViewHolder(Context context, View itemView) {
+            super(itemView);
+            this.context = context;
+            itemImageView = itemView.findViewById(R.id.gallery_item_image);
+            itemImageView.setOnClickListener(this);
+        }
+
+        @Override public void onClick(View v) {
+            if (v instanceof ImageView) {
+                Intent intent = new Intent(context, ImageActivity.class);
+                intent.putExtra("image", imageUrls.get(position));
+
+                context.startActivity(intent);
+            }
+        }
+    }
+
+    public static class ImageAdapter extends RecyclerView.Adapter<ViewHolder>  {
         private List<String> imageUrls;
         private Context context;
 
@@ -150,7 +171,7 @@ public class GalleryActivity extends AppCompatActivity {
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             LayoutInflater inflater = LayoutInflater.from(context);
             View v = inflater.inflate(R.layout.gallery_item, parent, false);
-            return new ViewHolder(v);
+            return new ViewHolder(context, v);
         }
 
         @Override public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
@@ -164,26 +185,6 @@ public class GalleryActivity extends AppCompatActivity {
 
         @Override public int getItemCount() {
             return imageUrls.size();
-        }
-
-        public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-            private ImageView itemImageView;
-            private int position;
-
-            public ViewHolder(View itemView) {
-                super(itemView);
-                itemImageView = itemView.findViewById(R.id.gallery_item_image);
-                itemImageView.setOnClickListener(this);
-            }
-
-            @Override public void onClick(View v) {
-                if (v instanceof ImageView) {
-                    Intent intent = new Intent(GalleryActivity.this, ImageActivity.class);
-                    intent.putExtra("image", imageUrls.get(position));
-
-                    startActivity(intent);
-                }
-            }
         }
     }
 }
