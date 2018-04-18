@@ -1,40 +1,23 @@
 package com.ideog.android.gallery;
 
-import android.content.Context;
-import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.GridView;
-import android.widget.ImageView;
-import android.widget.TextView;
-
-import com.bumptech.glide.Glide;
-import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 import okhttp3.Call;
@@ -42,6 +25,8 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class GalleryActivity extends AppCompatActivity {
     private static String TAG = "GalleryActivity";
@@ -74,7 +59,33 @@ public class GalleryActivity extends AppCompatActivity {
         recycler_view.setAdapter(adapter);
         search_btn.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
-                findImages(search_edit.getText().toString());
+//                findImages(search_edit.getText().toString());
+
+                Retrofit retrofit = new Retrofit.Builder()
+                        .baseUrl("https://api.flickr.com/")
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build();
+                FlickrAPI flickrAPI = retrofit.create(FlickrAPI.class);
+
+                flickrAPI.getPhotos(
+                        API_KEY,
+                        "sexy",
+                        "interestingness-asc",
+                        "1",
+                        "json",
+                        "url_m"
+                ).enqueue(new retrofit2.Callback<List<FlickrResultModel>>() {
+                    @Override
+                    public void onResponse(retrofit2.Call<List<FlickrResultModel>> call, retrofit2.Response<List<FlickrResultModel>> response) {
+                        Log.i(TAG, "onResponse: code = " + response.code());
+                    }
+
+                    @Override
+                    public void onFailure(retrofit2.Call<List<FlickrResultModel>> call, Throwable t) {
+
+                    }
+                });
+
             }
         });
     }
@@ -91,10 +102,11 @@ public class GalleryActivity extends AppCompatActivity {
                 .appendQueryParameter("sort", "interestingness-asc")
                 .appendQueryParameter("format", "json")
                 .appendQueryParameter("nojsoncallback", "1")
-                .appendQueryParameter("extras", "url_s")
+                .appendQueryParameter("extras", "url_m")
                 .build().toString();
         Log.i(TAG, "findImages: url request = " + url);
         OkHttpClient client = new OkHttpClient();
+
 
         Request request = new Request.Builder()
                 .url(url)
@@ -111,10 +123,10 @@ public class GalleryActivity extends AppCompatActivity {
                     JSONObject raw = new JSONObject(resp);
                     JSONObject photos = raw.getJSONObject("photos");
                     JSONArray photo = photos.getJSONArray("photo");
-                    int len = (photo.length() > 20) ? 20 : photo.length();
+                    int len = photo.length();
                     imageUrls.clear();
                     for (int i=0; i < len; i++) {
-                        String url = photo.getJSONObject(i).getString("url_s");
+                        String url = photo.getJSONObject(i).getString("url_m");
                         imageUrls.add(url);
                     }
 
