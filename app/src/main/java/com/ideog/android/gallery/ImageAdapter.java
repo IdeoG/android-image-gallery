@@ -30,6 +30,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder>{
     @Override public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         String url = imageUrls.get(position);
         holder.position = position;
+        holder.itemCount = getItemCount();
 
         Picasso.get()
                 .load(url)
@@ -43,6 +44,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder>{
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private ImageView itemImageView;
         private int position;
+        private int itemCount;
         private Context context;
 
         public ViewHolder(Context context, View itemView) {
@@ -56,6 +58,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder>{
             if (v instanceof ImageView) {
                 Intent intent = new Intent(context, ImageActivity.class);
                 intent.putExtra("image", imageUrls.get(position));
+                intent.putExtra("position", position);
+                intent.putExtra("itemCount", itemCount);
 
                 context.startActivity(intent);
             }
