@@ -60,29 +60,48 @@ public class GalleryActivity extends AppCompatActivity {
         search_btn.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
 //                findImages(search_edit.getText().toString());
+                Log.i(TAG, "onClick: Button click");
 
                 Retrofit retrofit = new Retrofit.Builder()
-                        .baseUrl("https://api.flickr.com/")
+                        .baseUrl("https://api.flickr.com")
                         .addConverterFactory(GsonConverterFactory.create())
                         .build();
                 FlickrAPI flickrAPI = retrofit.create(FlickrAPI.class);
 
                 flickrAPI.getPhotos(
                         API_KEY,
-                        "sexy",
+                        search_edit.getText().toString(),
                         "interestingness-asc",
                         "1",
                         "json",
                         "url_m"
-                ).enqueue(new retrofit2.Callback<List<FlickrResultModel>>() {
+                ).enqueue(new retrofit2.Callback<FlickrResultModel>() {
                     @Override
-                    public void onResponse(retrofit2.Call<List<FlickrResultModel>> call, retrofit2.Response<List<FlickrResultModel>> response) {
+                    public void onResponse(retrofit2.Call<FlickrResultModel> call, retrofit2.Response<FlickrResultModel> response) {
                         Log.i(TAG, "onResponse: code = " + response.code());
+                        Log.i(TAG, "onResponse: raw response: \n" + response.raw());
+
+                        if (!response.isSuccessful())
+                            return;
+
+                        FlickrResultModel model = response.body();
+                        imageUrls.clear();
+                        for (Photo photo : model.getPhotos().getPhoto()) {
+                            String url = photo.getUrlM();
+                            String title = photo.getTitle();
+                            imageUrls.add(0, url);
+                        }
+
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override public void run() {
+                                adapter.notifyDataSetChanged();
+                            }
+                        });
                     }
 
                     @Override
-                    public void onFailure(retrofit2.Call<List<FlickrResultModel>> call, Throwable t) {
-
+                    public void onFailure(retrofit2.Call<FlickrResultModel> call, Throwable t) {
+                        Log.i(TAG, "onFailure: " + t.getMessage());
                     }
                 });
 

@@ -8,8 +8,8 @@ import retrofit2.http.GET;
 import retrofit2.http.Query;
 
 public interface FlickrAPI {
-    @GET("/services//rest/?method=flickr.photos.search")
-    Call<List<FlickrResultModel>> getPhotos(
+    @GET("/services/rest/?method=flickr.photos.search")
+    Call<FlickrResultModel> getPhotos(
             @Query("api_key") String apiKey,
             @Query("text") String text,
             @Query("sort") String sort,
