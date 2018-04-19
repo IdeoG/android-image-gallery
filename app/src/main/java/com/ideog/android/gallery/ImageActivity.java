@@ -7,7 +7,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.widget.ImageView;
 
-import com.squareup.picasso.Picasso;
+import com.bumptech.glide.Glide;
 
 public class ImageActivity extends AppCompatActivity {
     private static String TAG = "ImageActivity";
@@ -29,7 +29,7 @@ public class ImageActivity extends AppCompatActivity {
         getSupportActionBar().setTitle(title);
 
         ImageView imageView = findViewById(R.id.srcImage);
-        Picasso.get()
+        Glide.with(this)
                 .load(url)
                 .into(imageView);
     }

@@ -18,12 +18,15 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class GalleryActivity extends AppCompatActivity {
     private static String TAG = "GalleryActivity";
@@ -56,7 +59,52 @@ public class GalleryActivity extends AppCompatActivity {
         recycler_view.setAdapter(adapter);
         search_btn.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
-                findImages(search_edit.getText().toString());
+//                findImages(search_edit.getText().toString());
+                Log.i(TAG, "onClick: Button click");
+
+                Retrofit retrofit = new Retrofit.Builder()
+                        .baseUrl("https://api.flickr.com")
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build();
+                FlickrAPI flickrAPI = retrofit.create(FlickrAPI.class);
+
+                flickrAPI.getPhotos(
+                        API_KEY,
+                        search_edit.getText().toString(),
+                        "interestingness-asc",
+                        "1",
+                        "json",
+                        "url_m"
+                ).enqueue(new retrofit2.Callback<FlickrResultModel>() {
+                    @Override
+                    public void onResponse(retrofit2.Call<FlickrResultModel> call, retrofit2.Response<FlickrResultModel> response) {
+                        Log.i(TAG, "onResponse: code = " + response.code());
+                        Log.i(TAG, "onResponse: raw response: \n" + response.raw());
+
+                        if (!response.isSuccessful())
+                            return;
+
+                        FlickrResultModel model = response.body();
+                        imageUrls.clear();
+                        for (Photo photo : model.getPhotos().getPhoto()) {
+                            String url = photo.getUrlM();
+                            String title = photo.getTitle();
+                            imageUrls.add(0, url);
+                        }
+
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override public void run() {
+                                adapter.notifyDataSetChanged();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(retrofit2.Call<FlickrResultModel> call, Throwable t) {
+                        Log.i(TAG, "onFailure: " + t.getMessage());
+                    }
+                });
+
             }
         });
     }
@@ -74,10 +122,10 @@ public class GalleryActivity extends AppCompatActivity {
                 .appendQueryParameter("format", "json")
                 .appendQueryParameter("nojsoncallback", "1")
                 .appendQueryParameter("extras", "url_m")
-                .appendQueryParameter("per_page", "50")
                 .build().toString();
         Log.i(TAG, "findImages: url request = " + url);
         OkHttpClient client = new OkHttpClient();
+
 
         Request request = new Request.Builder()
                 .url(url)

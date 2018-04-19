@@ -8,7 +8,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import com.squareup.picasso.Picasso;
+
+import com.bumptech.glide.Glide;
 import java.util.List;
 
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder>{
@@ -32,7 +33,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder>{
         holder.position = position;
         holder.itemCount = getItemCount();
 
-        Picasso.get()
+        Glide.with(context)
                 .load(url)
                 .into(holder.itemImageView);
     }
