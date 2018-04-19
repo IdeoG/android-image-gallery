@@ -46,9 +46,7 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
     @Override public void onClick(View v) {
         if (!(v instanceof Button))
             return;
-
-        Log.i(TAG, "onClick: Button click");
-
+        
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://api.flickr.com")
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
