@@ -1,9 +1,6 @@
 package com.ideog.android.gallery;
 
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -12,20 +9,16 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableObserver;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 
@@ -47,6 +40,42 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
         initializeUI();
     }
 
+    @Override public void onClick(View v) {
+        if (!(v instanceof Button))
+            return;
+
+        Log.i(TAG, "onClick: Button click");
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://api.flickr.com")
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        FlickrAPI flickrAPI = retrofit.create(FlickrAPI.class);
+
+        Observable<FlickrResultModel> model = flickrAPI.getPhotos(
+                API_KEY,
+                search_edit.getText().toString(),
+                "interestingness-asc",
+                "1",
+                "json",
+                "url_m"
+        );
+
+        model.subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe( response -> {
+                    imageUrls.clear();
+                    for (Photo photo : response.getPhotos().getPhoto()) {
+                        String url = photo.getUrlM();
+                        String title = photo.getTitle();
+                        imageUrls.add(0, url);
+                    }
+                    adapter.notifyDataSetChanged();
+                });
+    }
+
     private void initializeUI() {
         search_btn = findViewById(R.id.search_btn);
         search_edit = findViewById(R.id.search_edit);
@@ -57,12 +86,12 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
                 GalleryActivity.this,
                 imageUrls
         );
+
         recycler_view.setAdapter(adapter);
-
         search_btn.setEnabled(false);
+        search_btn.setOnClickListener(this);
 
-        RxHelper.
-                searchValidatorObservable(search_edit)
+        RxHelper.searchValidatorObservable(search_edit)
                 .subscribe(new DisposableObserver<Boolean>() {
                     @Override
                     public void onNext(Boolean aBoolean) {
@@ -80,58 +109,6 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
 
                     }
                 });
-
-        search_btn.setOnClickListener(this);
     }
 
-    @Override
-    public void onClick(View v) {
-        if (!(v instanceof Button))
-            return;
-
-        Log.i(TAG, "onClick: Button click");
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://api.flickr.com")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        FlickrAPI flickrAPI = retrofit.create(FlickrAPI.class);
-
-        flickrAPI.getPhotos(
-                API_KEY,
-                search_edit.getText().toString(),
-                "interestingness-asc",
-                "1",
-                "json",
-                "url_m"
-        ).enqueue(new retrofit2.Callback<FlickrResultModel>() {
-            @Override
-            public void onResponse(retrofit2.Call<FlickrResultModel> call, retrofit2.Response<FlickrResultModel> response) {
-                Log.i(TAG, "onResponse: code = " + response.code());
-                Log.i(TAG, "onResponse: raw response: \n" + response.raw());
-
-                if (!response.isSuccessful())
-                    return;
-
-                FlickrResultModel model = response.body();
-                imageUrls.clear();
-                for (Photo photo : model.getPhotos().getPhoto()) {
-                    String url = photo.getUrlM();
-                    String title = photo.getTitle();
-                    imageUrls.add(0, url);
-                }
-
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override public void run() {
-                        adapter.notifyDataSetChanged();
-                    }
-                });
-            }
-
-            @Override
-            public void onFailure(retrofit2.Call<FlickrResultModel> call, Throwable t) {
-                Log.i(TAG, "onFailure: " + t.getMessage());
-            }
-        });
-    }
 }
