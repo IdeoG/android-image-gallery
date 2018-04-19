@@ -1,4 +1,4 @@
-package com.ideog.android.gallery;
+package com.ideog.android.gallery.models;
 
 import java.util.List;
 import com.google.gson.annotations.Expose;

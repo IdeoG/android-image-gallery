@@ -1,7 +1,8 @@
-package com.ideog.android.gallery;
+package com.ideog.android.gallery.models;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.ideog.android.gallery.models.Photos;
 
 public class FlickrResultModel {
 

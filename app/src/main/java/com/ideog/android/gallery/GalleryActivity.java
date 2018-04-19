@@ -10,11 +10,14 @@ import android.widget.Button;
 import android.widget.EditText;
 
 
+import com.ideog.android.gallery.models.FlickrAPI;
+import com.ideog.android.gallery.models.FlickrResultModel;
+import com.ideog.android.gallery.models.Photo;
+
 import java.util.ArrayList;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
