@@ -16,6 +16,9 @@ import com.ideog.android.gallery.models.Photo;
 
 import java.util.ArrayList;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DisposableObserver;
@@ -25,13 +28,13 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 
-public class GalleryActivity extends AppCompatActivity implements View.OnClickListener {
+public class GalleryActivity extends AppCompatActivity {
     private static String TAG = "GalleryActivity";
     private final String API_KEY = "967e2082cbdb43b27b6c0df3325d1843";
 
-    Button search_btn = null;
-    EditText search_edit = null;
-    RecyclerView recycler_view;
+    @BindView(R.id.search_btn) Button search_btn;
+    @BindView(R.id.search_edit) EditText search_edit;
+    @BindView(R.id.my_recycler_view) RecyclerView recycler_view;
     RecyclerView.Adapter adapter;
 
     private static ArrayList<String> imageUrls = new ArrayList<>();
@@ -43,10 +46,8 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
         initializeUI();
     }
 
-    @Override public void onClick(View v) {
-        if (!(v instanceof Button))
-            return;
-        
+    @OnClick(R.id.search_btn)
+    public void Search() {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://api.flickr.com")
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
@@ -78,9 +79,8 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
     }
 
     private void initializeUI() {
-        search_btn = findViewById(R.id.search_btn);
-        search_edit = findViewById(R.id.search_edit);
-        recycler_view = findViewById(R.id.my_recycler_view);
+
+        ButterKnife.bind(this);
 
         recycler_view.setLayoutManager(new GridLayoutManager(this, 2));
         adapter = new ImageAdapter(
@@ -90,7 +90,6 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
 
         recycler_view.setAdapter(adapter);
         search_btn.setEnabled(false);
-        search_btn.setOnClickListener(this);
 
         RxHelper.searchValidatorObservable(search_edit)
                 .subscribe(new DisposableObserver<Boolean>() {

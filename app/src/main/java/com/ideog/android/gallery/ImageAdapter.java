@@ -12,6 +12,10 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder>{
     private static List<String> imageUrls;
     private Context context;
@@ -42,8 +46,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder>{
         return imageUrls.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        private ImageView itemImageView;
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        @BindView(R.id.gallery_item_image) ImageView itemImageView;
         private int position;
         private int itemCount;
         private Context context;
@@ -51,11 +55,10 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder>{
         public ViewHolder(Context context, View itemView) {
             super(itemView);
             this.context = context;
-            itemImageView = itemView.findViewById(R.id.gallery_item_image);
-            itemImageView.setOnClickListener(this);
+            ButterKnife.bind(this, itemView);
         }
 
-        @Override public void onClick(View v) {
+        @OnClick(R.id.gallery_item_image) public void onPick(View v) {
             if (v instanceof ImageView) {
                 Intent intent = new Intent(context, ImageActivity.class);
                 intent.putExtra("image", imageUrls.get(position));
