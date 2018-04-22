@@ -71,7 +71,6 @@ public class GalleryActivity extends AppCompatActivity {
                     imageUrls.clear();
                     for (Photo photo : response.getPhotos().getPhoto()) {
                         String url = photo.getUrlM();
-                        String title = photo.getTitle();
                         imageUrls.add(0, url);
                     }
                     adapter.notifyDataSetChanged();

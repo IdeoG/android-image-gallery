@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +18,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder>{
+    private static String TAG = "ImageAdapter";
     private static List<String> imageUrls;
     private Context context;
 
@@ -37,6 +39,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder>{
         holder.position = position;
         holder.itemCount = getItemCount();
 
+        Log.i(TAG, "onBindViewHolder: url = " + url);
         Glide.with(context)
                 .load(url)
                 .into(holder.itemImageView);

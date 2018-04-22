@@ -21,7 +21,7 @@ public class ImageActivity extends AppCompatActivity {
         String url = extras.getString("image");
         int position = extras.getInt("position");
         int itemCount = extras.getInt("itemCount");
-        String title = String.valueOf(position+1) + " из " + String.valueOf(itemCount+1);
+        String title = String.valueOf(position+1) + " из " + String.valueOf(itemCount);
 
         Toolbar toolbar = findViewById(R.id.image_toolbar);
         setSupportActionBar(toolbar);
